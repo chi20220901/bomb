@@ -30,28 +30,37 @@
 class Main extends eui.UILayer {
     protected createChildren(): void {
         super.createChildren();
-        egret.lifecycle.onPause = egret.ticker.pause;
-        egret.lifecycle.onResume = egret.ticker.resume;
-  
+        egret.lifecycle.onPause = () => egret.ticker.pause();
+        egret.lifecycle.onResume = () => egret.ticker.resume();
+
         egret.registerImplementation("eui.IAssetAdapter", new AssetAdapter());
         egret.registerImplementation("eui.IThemeAdapter", new ThemeAdapter());
 
         this.runGame();
     }
-    
+
     private async loadResource() {
         const loadingView = new LoadingUI();
         this.stage.addChild(loadingView);
         await RES.loadConfig("resource/default.res.json", "resource/");
         await new Promise((resolve) => {
             new eui.Theme("resource/default.thm.json", this.stage)
-            .once(eui.UIEvent.COMPLETE, resolve, this);
+                .once(eui.UIEvent.COMPLETE, resolve, this);
         });
         await RES.loadGroup("preload", 0, loadingView);
         this.stage.removeChild(loadingView);
     }
 
     private async runGame() {
-        await this.loadResource()
+        await this.loadResource();
+        // this.drawCustomCircle();
+    }
+    private drawCustomCircle() {
+        const shp = new egret.Shape();
+        shp.graphics.beginFill(0xff0000);
+        shp.graphics.drawCircle(50, 50, 50);
+        shp.graphics.endFill();
+        this.addChild(shp);
+        egret.Tween.get(shp, { loop: true }).set({ x: 0 }).to({ x: 500 }, 5000);
     }
 }
