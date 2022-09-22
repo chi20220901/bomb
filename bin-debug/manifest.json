@@ -7,7 +7,11 @@
 		"js/dragonBones.js",
 		"js/game.js",
 		"js/tween.js",
-		"js/promise.js"
+		"js/promise.js",
+		"js/physics.js",
+		"js/particle.js"
 	],
-	"game": []
+	"game": [
+		"js/main.js"
+	]
 }

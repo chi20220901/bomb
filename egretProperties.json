@@ -26,11 +26,20 @@
     },
     {
       "name": "promise"
+    },
+    {
+      "name": "physics",
+      "path": "../../egret-game-library/physics/libsrc/bin/physics"
+    },
+    {
+      "name": "particle",
+      "path": "../../egret-game-library/particle/libsrc/bin/particle"
     }
   ],
   "eui": {
     "exmlRoot": [
-      "resource/eui_skins"
+      "resource/eui_skins",
+      "resource/mySkin"
     ]
   }
 }

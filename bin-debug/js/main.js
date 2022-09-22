@@ -364,6 +364,142 @@ __reflect(AssetAdapter.prototype,"AssetAdapter",["eui.IAssetAdapter"]);
 
 /***/ }),
 
+/***/ "./src/Bomb.ts":
+/***/ (function(module, exports) {
+
+var Bomb = /** @class */ (function () {
+    function Bomb(x, y) {
+        this.factor = 50;
+        this.radius = 1;
+        this.catchState = false;
+        this.score = 0;
+        this.totalTime = (Math.floor(Math.random() * 10) + 10) * 1000;
+        this.finishTime = this.totalTime + egret.getTimer();
+        this.shape = new egret.Shape();
+        this.shape.anchorOffsetX = this.radius * this.factor;
+        this.shape.anchorOffsetY = this.radius * this.factor;
+        this.shapeBody = new p2.Body({
+            mass: 1,
+            position: [x, y],
+            type: p2.Body.DYNAMIC,
+            fixedRotation: true,
+        });
+        this.shapeBody.addShape(new p2.Circle({ radius: this.radius }));
+        this.shapeBody.displays = [this.shape];
+    }
+    Bomb.prototype.drawTimeLife = function (timeStamp) {
+        var dt = 1 - (this.finishTime - timeStamp) / this.totalTime;
+        if (this.catchState) {
+            dt = 1 - this.catchTime / this.totalTime;
+        }
+        if (dt > 1) {
+            dt = 1;
+        }
+        var progressPercentage = ((dt * 100) >> 0) / 100;
+        var total = 0;
+        var rgbBase = [0x0000ff, 0x00ff00, 0xff0000];
+        //白黃黑
+        var u = progressPercentage, startColor = 0xffffff, endColor = 0xefd54d;
+        if (progressPercentage >= 0.5) {
+            u = (u - 0.5);
+            startColor = endColor;
+            endColor = 0x000000;
+        }
+        u *= 2;
+        for (var i = 0; i < rgbBase.length; i++) {
+            var a = (startColor & rgbBase[i]) >> i * 8;
+            var b = (endColor & rgbBase[i]) >> i * 8;
+            var c = (1 - u) * a + u * b;
+            total += c << i * 8;
+        }
+        this.shape.graphics.clear();
+        this.shape.graphics.beginFill(total, 1);
+        var radius = this.radius * this.factor;
+        // if (this.catchState) {
+        //     radius *= 1.5;
+        // }
+        this.shape.graphics.drawCircle(radius, radius, radius);
+        // console.log(this.shapeBody.shapes[0].radius);
+        this.shape.graphics.lineStyle(4, 0x000000);
+        var start = -90;
+        var end = start + progressPercentage * 360;
+        this.shape.graphics.drawArc(this.radius * this.factor, this.radius * this.factor, this.radius * this.factor, Math.PI / 180 * start, Math.PI / 180 * end, false);
+        this.shape.graphics.endFill();
+    };
+    Bomb.prototype.addWorld = function (world) {
+        world.addBody(this.shapeBody);
+    };
+    Bomb.prototype.addStage = function (stage) {
+        this.particle = new particle.GravityParticleSystem(RES.getRes('newParticle_png'), RES.getRes('newParticle_json'));
+        stage.addChild(this.particle);
+        this.particle.start();
+        this.particle.zIndex = 1;
+        this.shape.zIndex = 2;
+        stage.addChild(this.shape);
+    };
+    Bomb.prototype.setParticlePosition = function () {
+        if (this.catchState)
+            return;
+        if (!this.particle)
+            return;
+        this.particle.x = this.shape.x;
+        this.particle.y = this.shape.y;
+        this.particle.anchorOffsetX = 100;
+        this.particle.anchorOffsetY = 100;
+    };
+    Bomb.prototype.randomMove = function (len) {
+        if (len === void 0) { len = 10; }
+        if (this.catchState)
+            return;
+        var center = len / 2;
+        if (p2.vec2.squaredLength(this.shapeBody.velocity) < 2 * 2) {
+            this.shapeBody.velocity = p2.vec2.fromValues(Math.floor(Math.random() * len * 10) / 10 - center, Math.floor(Math.random() * len * 10) / 10 - center);
+        }
+    };
+    Bomb.prototype.getBody = function () {
+        return this.shapeBody;
+    };
+    Bomb.prototype.catchUp = function () {
+        var _a;
+        if (this.catchState)
+            return;
+        this.catchState = true;
+        this.catchTime = this.finishTime - egret.getTimer();
+        this.shapeBody.type = p2.Body.KINEMATIC;
+        (_a = this.particle) === null || _a === void 0 ? void 0 : _a.stop();
+    };
+    Bomb.prototype.putDownDangerous = function () {
+        var _a;
+        this.catchState = false;
+        this.finishTime = this.catchTime + egret.getTimer();
+        this.shapeBody.type = p2.Body.DYNAMIC;
+        (_a = this.particle) === null || _a === void 0 ? void 0 : _a.start();
+    };
+    Bomb.prototype.putDownSafe = function () {
+        this.catchState = true;
+        this.finishTime = this.catchTime + egret.getTimer();
+        this.shapeBody.type = p2.Body.KINEMATIC;
+    };
+    Bomb.prototype.getScore = function () {
+        var timeStamp = egret.getTimer();
+        var dt = 1 - (this.finishTime - timeStamp) / this.totalTime;
+        if (this.catchState) {
+            dt = 1 - this.catchTime / this.totalTime;
+        }
+        if (dt > 1) {
+            dt = 1;
+        }
+        this.score = ((0.5 - Math.abs(dt - 0.5)) * 2 * 100) >> 0;
+        return this.score;
+    };
+    return Bomb;
+}());
+window["Bomb"] = Bomb;
+__reflect(Bomb.prototype,"Bomb",[]); 
+
+
+/***/ }),
+
 /***/ "./src/LoadingUI.ts":
 /***/ (function(module, exports) {
 
@@ -425,7 +561,9 @@ __reflect(LoadingUI.prototype,"LoadingUI",["RES.PromiseTaskReporter"]);
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__("./src/AssetAdapter.ts");
+__webpack_require__("./src/Bomb.ts");
 __webpack_require__("./src/LoadingUI.ts");
+__webpack_require__("./src/MainScene.ts");
 __webpack_require__("./src/Platform.ts");
 __webpack_require__("./src/ThemeAdapter.ts");
 //////////////////////////////////////////////////////////////////////////////////////
@@ -463,196 +601,268 @@ var Main = /** @class */ (function (_super) {
     }
     Main.prototype.createChildren = function () {
         _super.prototype.createChildren.call(this);
-        egret.lifecycle.addLifecycleListener(function (context) {
-            // custom lifecycle plugin
-        });
-        egret.lifecycle.onPause = function () {
-            egret.ticker.pause();
-        };
-        egret.lifecycle.onResume = function () {
-            egret.ticker.resume();
-        };
-        //inject the custom material parser
-        //注入自定义的素材解析器
-        var assetAdapter = new AssetAdapter();
-        egret.registerImplementation("eui.IAssetAdapter", assetAdapter);
+        egret.lifecycle.onPause = function () { return egret.ticker.pause(); };
+        egret.lifecycle.onResume = function () { return egret.ticker.resume(); };
+        egret.registerImplementation("eui.IAssetAdapter", new AssetAdapter());
         egret.registerImplementation("eui.IThemeAdapter", new ThemeAdapter());
-        this.runGame().catch(function (e) {
-            console.log(e);
-        });
-    };
-    Main.prototype.runGame = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var result, userInfo;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.loadResource()];
-                    case 1:
-                        _a.sent();
-                        this.createGameScene();
-                        return [4 /*yield*/, RES.getResAsync("description_json")];
-                    case 2:
-                        result = _a.sent();
-                        this.startAnimation(result);
-                        return [4 /*yield*/, platform.login()];
-                    case 3:
-                        _a.sent();
-                        return [4 /*yield*/, platform.getUserInfo()];
-                    case 4:
-                        userInfo = _a.sent();
-                        console.log(userInfo);
-                        return [2 /*return*/];
-                }
-            });
-        });
+        this.runGame();
     };
     Main.prototype.loadResource = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var loadingView, e_1;
+            var loadingView;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 4, , 5]);
                         loadingView = new LoadingUI();
                         this.stage.addChild(loadingView);
                         return [4 /*yield*/, RES.loadConfig("resource/default.res.json", "resource/")];
                     case 1:
                         _a.sent();
-                        return [4 /*yield*/, this.loadTheme()];
+                        return [4 /*yield*/, new Promise(function (resolve) {
+                                new eui.Theme("resource/default.thm.json", _this.stage)
+                                    .once(eui.UIEvent.COMPLETE, resolve, _this);
+                            })];
                     case 2:
                         _a.sent();
                         return [4 /*yield*/, RES.loadGroup("preload", 0, loadingView)];
                     case 3:
                         _a.sent();
                         this.stage.removeChild(loadingView);
-                        return [3 /*break*/, 5];
-                    case 4:
-                        e_1 = _a.sent();
-                        console.error(e_1);
-                        return [3 /*break*/, 5];
-                    case 5: return [2 /*return*/];
+                        return [2 /*return*/];
                 }
             });
         });
     };
-    Main.prototype.loadTheme = function () {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            // load skin theme configuration file, you can manually modify the file. And replace the default skin.
-            //加载皮肤主题配置文件,可以手动修改这个文件。替换默认皮肤。
-            var theme = new eui.Theme("resource/default.thm.json", _this.stage);
-            theme.addEventListener(eui.UIEvent.COMPLETE, function () {
-                resolve();
-            }, _this);
+    Main.prototype.runGame = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.loadResource()];
+                    case 1:
+                        _a.sent();
+                        this.addChild(new MainScene());
+                        return [2 /*return*/];
+                }
+            });
         });
-    };
-    /**
-     * 创建场景界面
-     * Create scene interface
-     */
-    Main.prototype.createGameScene = function () {
-        var sky = this.createBitmapByName("bg_jpg");
-        this.addChild(sky);
-        var stageW = this.stage.stageWidth;
-        var stageH = this.stage.stageHeight;
-        sky.width = stageW;
-        sky.height = stageH;
-        var topMask = new egret.Shape();
-        topMask.graphics.beginFill(0x000000, 0.5);
-        topMask.graphics.drawRect(0, 0, stageW, 172);
-        topMask.graphics.endFill();
-        topMask.y = 33;
-        this.addChild(topMask);
-        var icon = this.createBitmapByName("egret_icon_png");
-        this.addChild(icon);
-        icon.x = 26;
-        icon.y = 33;
-        var line = new egret.Shape();
-        line.graphics.lineStyle(2, 0xffffff);
-        line.graphics.moveTo(0, 0);
-        line.graphics.lineTo(0, 117);
-        line.graphics.endFill();
-        line.x = 172;
-        line.y = 61;
-        this.addChild(line);
-        var colorLabel = new egret.TextField();
-        colorLabel.textColor = 0xffffff;
-        colorLabel.width = stageW - 172;
-        colorLabel.textAlign = "center";
-        colorLabel.text = "Hello Egret";
-        colorLabel.size = 24;
-        colorLabel.x = 172;
-        colorLabel.y = 80;
-        this.addChild(colorLabel);
-        var textfield = new egret.TextField();
-        this.addChild(textfield);
-        textfield.alpha = 0;
-        textfield.width = stageW - 172;
-        textfield.textAlign = egret.HorizontalAlign.CENTER;
-        textfield.size = 24;
-        textfield.textColor = 0xffffff;
-        textfield.x = 172;
-        textfield.y = 135;
-        this.textfield = textfield;
-        var button = new eui.Button();
-        button.label = "Click!";
-        button.horizontalCenter = 0;
-        button.verticalCenter = 0;
-        this.addChild(button);
-        button.addEventListener(egret.TouchEvent.TOUCH_TAP, this.onButtonClick, this);
-    };
-    /**
-     * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
-     * Create a Bitmap object according to name keyword.As for the property of name please refer to the configuration file of resources/resource.json.
-     */
-    Main.prototype.createBitmapByName = function (name) {
-        var result = new egret.Bitmap();
-        var texture = RES.getRes(name);
-        result.texture = texture;
-        return result;
-    };
-    /**
-     * 描述文件加载成功，开始播放动画
-     * Description file loading is successful, start to play the animation
-     */
-    Main.prototype.startAnimation = function (result) {
-        var _this = this;
-        var parser = new egret.HtmlTextParser();
-        var textflowArr = result.map(function (text) { return parser.parse(text); });
-        var textfield = this.textfield;
-        var count = -1;
-        var change = function () {
-            count++;
-            if (count >= textflowArr.length) {
-                count = 0;
-            }
-            var textFlow = textflowArr[count];
-            // 切换描述内容
-            // Switch to described content
-            textfield.textFlow = textFlow;
-            var tw = egret.Tween.get(textfield);
-            tw.to({ "alpha": 1 }, 200);
-            tw.wait(2000);
-            tw.to({ "alpha": 0 }, 200);
-            tw.call(change, _this);
-        };
-        change();
-    };
-    /**
-     * 点击按钮
-     * Click the button
-     */
-    Main.prototype.onButtonClick = function (e) {
-        var panel = new eui.Panel();
-        panel.title = "Title";
-        panel.horizontalCenter = 0;
-        panel.verticalCenter = 0;
-        this.addChild(panel);
     };
     return Main;
 }(eui.UILayer));
 window["Main"] = Main;
 __reflect(Main.prototype,"Main",[]); 
+
+
+/***/ }),
+
+/***/ "./src/MainScene.ts":
+/***/ (function(module, exports) {
+
+var MainScene = /** @class */ (function (_super) {
+    __extends(MainScene, _super);
+    function MainScene() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.factor = 50;
+        return _this;
+    }
+    MainScene.prototype.createChildren = function () {
+        _super.prototype.createChildren.call(this);
+        this.skinName = skins.MainSceneSkin;
+        // this.sortableChildren = true;
+        // this.startGameBtn.addEventListener(egret.TouchEvent.TOUCH_TAP, this.startHandler, this);
+        setTimeout(this.startHandler.bind(this), 100);
+        // this.startHandler.bind(this)()
+        // this.addEventListener(egret.Event.ADDED_TO_STAGE, this.startHandler, this);
+    };
+    MainScene.prototype.startHandler = function () {
+        var _this = this;
+        var areaArray = [this.safeArea1, this.safeArea2, this.dangerousArea];
+        egret.Tween.get(this.startGameBtn).to({ alpha: 0 }, 500).call(function () { return _this.removeChild(_this.startGameBtn); });
+        egret.Tween.get(this.background).to({ alpha: 0 }, 500).call(function () { return _this.removeChild(_this.background); });
+        var _loop_1 = function (i) {
+            egret.Tween.get(areaArray[i])
+                .call(function () { return areaArray[i].fillAlpha = 1; })
+                .set({ alpha: 0 })
+                .to({ alpha: 1 }, 500);
+        };
+        for (var i = 0; i < areaArray.length; i++) {
+            _loop_1(i);
+        }
+        var stageWidth = egret.MainContext.instance.stage.stageWidth;
+        var stageHeight = egret.MainContext.instance.stage.stageHeight;
+        // console.log(stageWidth, stageHeight);
+        var wCount = 5;
+        var hCount = 5;
+        var w = stageWidth * 0.6 / wCount;
+        var h = stageHeight / hCount;
+        var pointArray = [];
+        var baseX = stageWidth * 0.2;
+        var baseY = stageHeight * 0;
+        for (var i = 0; i < wCount; i++) {
+            for (var j = 0; j < hCount; j++) {
+                var x = (baseX + w * i + w / 2) / this.factor;
+                var y = (baseY + h * j + h / 2) / this.factor;
+                pointArray.push({ x: x, y: y, random: Math.random() });
+            }
+        }
+        pointArray.sort(function (a, b) {
+            return a.random - b.random;
+        });
+        var world = new p2.World({
+            gravity: [0, 0],
+        });
+        world.sleepMode = p2.World.BODY_SLEEPING;
+        var makeWall = function (_a) {
+            var x = _a.x, y = _a.y, w = _a.w, h = _a.h;
+            var body = new p2.Body({
+                mass: 1,
+                type: p2.Body.STATIC,
+                position: [x, y]
+            });
+            body.addShape(new p2.Box({ width: w, height: h }));
+            var shape = new egret.Shape();
+            shape.graphics.beginFill(0x0000ff, 1);
+            shape.graphics.drawRect(x * _this.factor, y * _this.factor, w * _this.factor, h * _this.factor);
+            shape.graphics.endFill();
+            shape.anchorOffsetX = w * _this.factor / 2;
+            shape.anchorOffsetY = h * _this.factor / 2;
+            body.displays = [shape];
+            _this.addChild(shape);
+            return body;
+        };
+        var width = stageWidth / this.factor;
+        var height = stageHeight / this.factor;
+        var thickness = 1 / 10;
+        var wallArray = [
+            { x: width / 2, y: height + thickness / 2, w: width, h: thickness },
+            { x: width / 2, y: -thickness / 2, w: width, h: thickness },
+            { x: -thickness / 2 + width * 0.2, y: height / 2, w: thickness, h: height },
+            { x: width + thickness / 2 - width * 0.2, y: height / 2, w: thickness, h: height },
+        ];
+        for (var i = 0; i < wallArray.length; i++) {
+            world.addBody(makeWall(wallArray[i]));
+        }
+        var bombCount = 10;
+        var bombArray = [];
+        var bombBodyArray = [];
+        for (var i = 0; i < pointArray.length; i++) {
+            var _a = pointArray[i], x = _a.x, y = _a.y;
+            var bomb = new Bomb(x, y);
+            bomb.addStage(this);
+            bomb.addWorld(world);
+            bombArray.push(bomb);
+            bombBodyArray.push(bomb.getBody());
+            if (i + 1 >= bombCount)
+                break;
+        }
+        var hitBombIndex = -1;
+        var mouseSubVec;
+        this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function (e) {
+            hitBombIndex = -1;
+            var mouseP = p2.vec2.fromValues(e.stageX / _this.factor, (stageHeight - e.stageY) / _this.factor);
+            var collisionArray = world.hitTest(mouseP, world.bodies, 0.1);
+            while (collisionArray.length > 0) {
+                var item = collisionArray.shift();
+                if (item.type !== p2.Body.STATIC) {
+                    var index = bombBodyArray.indexOf(item);
+                    if (index != -1) {
+                        hitBombIndex = index;
+                        var bomb = bombArray[hitBombIndex];
+                        bomb.catchUp();
+                        world.removeBody(item);
+                        item.sleep();
+                        mouseSubVec = p2.vec2.create();
+                        p2.vec2.sub(mouseSubVec, item.position, mouseP);
+                        break;
+                    }
+                }
+            }
+        }, this);
+        this.addEventListener(egret.TouchEvent.TOUCH_MOVE, function (e) {
+            if (hitBombIndex != -1) {
+                var mouseP = p2.vec2.fromValues(e.stageX / _this.factor, (stageHeight - e.stageY) / _this.factor);
+                var bomb = bombArray[hitBombIndex];
+                var hitCollisionItem = bomb.getBody();
+                p2.vec2.add(hitCollisionItem.position, mouseP, mouseSubVec);
+                hitCollisionItem.velocity = p2.vec2.create();
+                _this.setPositionBodyToShape(hitCollisionItem);
+            }
+        }, this);
+        var score = 0;
+        this.addEventListener(egret.TouchEvent.TOUCH_END, function (e) {
+            if (hitBombIndex != -1) {
+                var bomb = bombArray[hitBombIndex];
+                var hitCollisionItem = bomb.getBody();
+                var tmpScore = bomb.getScore();
+                if (e.stageX >= stageWidth * 0.2
+                    && e.stageX <= stageWidth * 0.8
+                    && e.stageY >= stageHeight * 0
+                    && e.stageY <= stageHeight * 1) {
+                    // console.log('回鍋')
+                    bomb.putDownDangerous();
+                    score -= tmpScore;
+                    _this.text.text = "score:" + score + "(-" + tmpScore + ")";
+                }
+                else {
+                    score += tmpScore;
+                    _this.text.text = "score:" + score + "(+" + tmpScore + ")";
+                    // console.log('未回鍋');
+                    bomb.putDownSafe();
+                }
+                world.addBody(hitCollisionItem);
+                hitBombIndex = -1;
+            }
+        }, this);
+        egret.startTick(function (timeStamp) {
+            world.step(16 / 1000);
+            for (var i = 0; i < bombArray.length; i++) {
+                var item = bombArray[i];
+                item.drawTimeLife(timeStamp);
+                item.randomMove(5);
+                item.setParticlePosition();
+            }
+            for (var i = 0; i < world.bodies.length; i++) {
+                var boxBody = world.bodies[i];
+                if (boxBody.type == p2.Body.STATIC)
+                    continue;
+                _this.setPositionBodyToShape(boxBody);
+            }
+            return false;
+        }, this);
+        this.drawText();
+    };
+    MainScene.prototype.setPositionBodyToShape = function (body) {
+        var stageHeight = egret.MainContext.instance.stage.stageHeight;
+        var box = body.displays[0];
+        if (box) {
+            box.x = body.position[0] * this.factor;
+            box.y = stageHeight - (body.position[1] * this.factor);
+            box.rotation = 360 - (body.angle + body.shapes[0].angle) * 180 / Math.PI;
+            // if (body.sleepState == p2.Body.SLEEPING) {
+            //     box.alpha = 0.5;
+            // } else {
+            //     box.alpha = 1;
+            // }
+        }
+    };
+    MainScene.prototype.drawText = function () {
+        this.text = new egret.TextField;
+        this.addChild(this.text);
+        this.text.size = 20;
+        this.text.x = 0;
+        this.text.y = this.stage.stageHeight - 20;
+        this.text.width = this.stage.stageWidth;
+        this.text.textAlign = egret.HorizontalAlign.CENTER;
+        this.text.textColor = 0x000000;
+        this.text.type = egret.TextFieldType.DYNAMIC;
+        this.text.lineSpacing = 6;
+        this.text.multiline = true;
+        this.text.text = "請將丸子移出油鍋(越接近油鍋言ㄙㄜ)";
+    };
+    return MainScene;
+}(eui.Component));
+window["MainScene"] = MainScene;
+__reflect(MainScene.prototype,"MainScene",[]); 
 
 
 /***/ }),

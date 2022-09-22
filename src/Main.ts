@@ -40,6 +40,7 @@ class Main extends eui.UILayer {
     }
 
     private async loadResource() {
+
         const loadingView = new LoadingUI();
         this.stage.addChild(loadingView);
         await RES.loadConfig("resource/default.res.json", "resource/");
@@ -53,14 +54,35 @@ class Main extends eui.UILayer {
 
     private async runGame() {
         await this.loadResource();
-        // this.drawCustomCircle();
+
+        this.addChild(new MainScene());
+
+        // const skeletonData = RES.getRes("Sheep_Ani_1_ske_json");
+        // const textureData = RES.getRes("Sheep_Ani_1_tex_json");
+        // const texture = RES.getRes("Sheep_Ani_1_tex_png");
+
+        // const factory = dragonBones.EgretFactory.factory;
+        // factory.parseDragonBonesData(skeletonData);
+        // factory.parseTextureAtlasData(textureData, texture);
+
+        // const armatureDisplay = factory.buildArmatureDisplay("Armature");
+
+        // armatureDisplay.animation.play("goat_idle_anim");
+
+        // const scale = this.stage.stageWidth * 0.2 / 700;
+        // armatureDisplay.scaleX = -scale;
+        // armatureDisplay.scaleY = scale;
+        // armatureDisplay.y = this.stage.stageHeight;
+        // armatureDisplay.x = this.stage.stageWidth * 0.2 / 2;
+
+        // this.addChild(armatureDisplay);
+        // console.log(armatureDisplay)
+        // this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, (e: egret.TouchEvent) => {
+        //     armatureDisplay.x = e.stageX;
+        //     armatureDisplay.y = e.stageY;
+        // }, this);
+
+        // armatureDisplay.height
     }
-    private drawCustomCircle() {
-        const shp = new egret.Shape();
-        shp.graphics.beginFill(0xff0000);
-        shp.graphics.drawCircle(50, 50, 50);
-        shp.graphics.endFill();
-        this.addChild(shp);
-        egret.Tween.get(shp, { loop: true }).set({ x: 0 }).to({ x: 500 }, 5000);
-    }
+
 }
