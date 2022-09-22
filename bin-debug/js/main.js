@@ -857,7 +857,7 @@ var MainScene = /** @class */ (function (_super) {
         this.text.type = egret.TextFieldType.DYNAMIC;
         this.text.lineSpacing = 6;
         this.text.multiline = true;
-        this.text.text = "請將丸子移出油鍋(越接近油鍋言ㄙㄜ)";
+        this.text.text = "請將丸子移出油鍋(越接近油的顏色分數越高)";
     };
     return MainScene;
 }(eui.Component));
