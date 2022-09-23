@@ -123,16 +123,20 @@ class Bomb {
         this.shapeBody.type = p2.Body.KINEMATIC;
         this.particle?.stop();
     }
+
     public putDownDangerous() {
         this.catchState = false;
         this.finishTime = this.catchTime + egret.getTimer();
         this.shapeBody.type = p2.Body.DYNAMIC;
         this.particle?.start();
     }
+
     public putDownSafe() {
+        // const catchStateChange = this.catchState == true;
         this.catchState = true;
         this.finishTime = this.catchTime + egret.getTimer();
         this.shapeBody.type = p2.Body.KINEMATIC;
+        // return catchStateChange;
     }
     private score = 0;
     public getScore() {

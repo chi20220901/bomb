@@ -79,10 +79,10 @@ class MainScene extends eui.Component {
         const height = stageHeight / this.factor;
         const thickness = 1 / 10;
         const wallArray = [
-            { x: width / 2, y: height + thickness / 2, w: width, h: thickness },
-            { x: width / 2, y: -thickness / 2, w: width, h: thickness },
+            // { x: width / 2, y: height + thickness / 2, w: width, h: thickness },
+            // { x: width / 2, y: -thickness / 2, w: width, h: thickness },
             { x: -thickness / 2 + width * 0.2, y: height / 2, w: thickness, h: height },
-            { x: width + thickness / 2 - width * 0.2, y: height / 2, w: thickness, h: height },
+            // { x: width + thickness / 2 - width * 0.2, y: height / 2, w: thickness, h: height },
         ];
 
         for (let i = 0; i < wallArray.length; i++) {
@@ -120,6 +120,9 @@ class MainScene extends eui.Component {
                         item.sleep();
                         mouseSubVec = p2.vec2.create();
                         p2.vec2.sub(mouseSubVec, item.position, mouseP);
+
+
+
                         break;
                     }
                 }
@@ -141,29 +144,40 @@ class MainScene extends eui.Component {
                 this.setPositionBodyToShape(hitCollisionItem);
             }
         }, this);
-        let score = 0;
         this.addEventListener(egret.TouchEvent.TOUCH_END, (e: egret.TouchEvent) => {
             if (hitBombIndex != -1) {
                 const bomb = bombArray[hitBombIndex];
                 const hitCollisionItem = bomb.getBody();
-                const tmpScore = bomb.getScore();
+                console.log(
+                    wallArray[0].x, wallArray[0].y
+                    // , wallArray[1].x, wallArray[1].y
+                    , bomb.shape.x, bomb.shape.y
+                    , bomb.shapeBody.position[0], bomb.shapeBody.position[1]
+                );
+
                 if (
                     e.stageX >= stageWidth * 0.2
                     && e.stageX <= stageWidth * 0.8
                     && e.stageY >= stageHeight * 0
                     && e.stageY <= stageHeight * 1
                 ) {
-                    // console.log('回鍋')
-                    bomb.putDownDangerous();
-                    score -= tmpScore;
-                    this.text.text = "score:" + score + "(-" + tmpScore + ")";
+                    // console.log('紅')
+                    bomb.putDownDangerous()
+
                 } else {
-                    score += tmpScore;
-                    this.text.text = "score:" + score + "(+" + tmpScore + ")";
-                    // console.log('未回鍋');
-                    bomb.putDownSafe();
+                    // console.log('綠');
+                    bomb.putDownSafe()
+                }
+                let score = 0;
+                for (let i = 0; i < bombArray.length; i++) {
+                    const bomb = bombArray[i];
+                    if (bomb.catchState) {
+                        score += bomb.getScore();
+                    }
                 }
 
+                // console.log(score)
+                this.text.text = "score:" + score;
                 world.addBody(hitCollisionItem);
                 hitBombIndex = -1;
             }

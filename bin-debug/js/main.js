@@ -476,9 +476,11 @@ var Bomb = /** @class */ (function () {
         (_a = this.particle) === null || _a === void 0 ? void 0 : _a.start();
     };
     Bomb.prototype.putDownSafe = function () {
+        // const catchStateChange = this.catchState == true;
         this.catchState = true;
         this.finishTime = this.catchTime + egret.getTimer();
         this.shapeBody.type = p2.Body.KINEMATIC;
+        // return catchStateChange;
     };
     Bomb.prototype.getScore = function () {
         var timeStamp = egret.getTimer();
@@ -757,6 +759,7 @@ var MainScene = /** @class */ (function (_super) {
         }
         var hitBombIndex = -1;
         var mouseSubVec;
+        var score = 0;
         this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, function (e) {
             hitBombIndex = -1;
             var mouseP = p2.vec2.fromValues(e.stageX / _this.factor, (stageHeight - e.stageY) / _this.factor);
@@ -773,6 +776,9 @@ var MainScene = /** @class */ (function (_super) {
                         item.sleep();
                         mouseSubVec = p2.vec2.create();
                         p2.vec2.sub(mouseSubVec, item.position, mouseP);
+                        var tmpScore = bomb.getScore();
+                        score += tmpScore;
+                        _this.text.text = "score:" + score + "(" + tmpScore + ")";
                         break;
                     }
                 }
@@ -788,7 +794,6 @@ var MainScene = /** @class */ (function (_super) {
                 _this.setPositionBodyToShape(hitCollisionItem);
             }
         }, this);
-        var score = 0;
         this.addEventListener(egret.TouchEvent.TOUCH_END, function (e) {
             if (hitBombIndex != -1) {
                 var bomb = bombArray[hitBombIndex];
@@ -798,14 +803,12 @@ var MainScene = /** @class */ (function (_super) {
                     && e.stageX <= stageWidth * 0.8
                     && e.stageY >= stageHeight * 0
                     && e.stageY <= stageHeight * 1) {
-                    // console.log('回鍋')
+                    // console.log('ㄏㄨㄥ')
                     bomb.putDownDangerous();
                     score -= tmpScore;
-                    _this.text.text = "score:" + score + "(-" + tmpScore + ")";
+                    _this.text.text = "score:" + score;
                 }
                 else {
-                    score += tmpScore;
-                    _this.text.text = "score:" + score + "(+" + tmpScore + ")";
                     // console.log('未回鍋');
                     bomb.putDownSafe();
                 }
