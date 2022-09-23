@@ -7,10 +7,7 @@ class Bomb {
     private totalTime: number;
     private catchState: boolean = false;
     private catchTime: number;
-    constructor(x, y) {
-        this.totalTime = (Math.floor(Math.random() * 10) + 10) * 1000;
-        this.finishTime = this.totalTime + egret.getTimer();
-
+    constructor() {
         this.shape = new egret.Shape();
 
         this.shape.anchorOffsetX = this.radius * this.factor;
@@ -18,7 +15,7 @@ class Bomb {
 
         this.shapeBody = new p2.Body({
             mass: 1,
-            position: [x, y],
+            position: [0, 0],
             type: p2.Body.DYNAMIC,
             fixedRotation: true,
         });
@@ -27,7 +24,13 @@ class Bomb {
         this.shapeBody.displays = [this.shape];
 
     }
-
+    public setLifeTime(lifeTime) {
+        this.totalTime = lifeTime;
+        this.finishTime = this.totalTime + egret.getTimer();
+    }
+    public setP(x, y) {
+        this.shapeBody.position = [x, y]
+    }
     public drawTimeLife(timeStamp) {
         let dt = 1 - (this.finishTime - timeStamp) / this.totalTime;
 
@@ -121,14 +124,14 @@ class Bomb {
         this.catchState = true;
         this.catchTime = this.finishTime - egret.getTimer();
         this.shapeBody.type = p2.Body.KINEMATIC;
-        this.particle?.stop();
+        this.particle.stop();
     }
 
     public putDownDangerous() {
         this.catchState = false;
         this.finishTime = this.catchTime + egret.getTimer();
         this.shapeBody.type = p2.Body.DYNAMIC;
-        this.particle?.start();
+        this.particle.start();
     }
 
     public putDownSafe() {

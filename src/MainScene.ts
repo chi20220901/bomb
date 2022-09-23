@@ -1,80 +1,86 @@
 class MainScene extends eui.Component {
-    private startGameBtn: eui.Button;
+
     private safeArea1: eui.Rect;
     private safeArea2: eui.Rect;
     private dangerousArea: eui.Rect;
-    private background: eui.Rect;
+
     private factor: number = 50;
+    private startTime: number;
+    private stageWidth: number;
+    private stageHeight: number;
+
     protected createChildren(): void {
         super.createChildren();
         this.skinName = skins.MainSceneSkin;
-        // this.sortableChildren = true;
-        // this.startGameBtn.addEventListener(egret.TouchEvent.TOUCH_TAP, this.startHandler, this);
-        setTimeout(this.startHandler.bind(this), 100);
-        // this.startHandler.bind(this)()
-        // this.addEventListener(egret.Event.ADDED_TO_STAGE, this.startHandler, this);
+
+        this.stageWidth = egret.MainContext.instance.stage.stageWidth;
+        this.stageHeight = egret.MainContext.instance.stage.stageHeight;
+        this.startTime = egret.getTimer();
+        this.initBombGrid();
+        this.randomBombGrid();
+        this.initWorld();
+        this.timeShape = new egret.Shape();
+        this.addChild(this.timeShape);
+
+
     }
-
-    private startHandler() {
-        const areaArray = [this.safeArea1, this.safeArea2, this.dangerousArea];
-        egret.Tween.get(this.startGameBtn).to({ alpha: 0 }, 500).call(() => this.removeChild(this.startGameBtn));
-        egret.Tween.get(this.background).to({ alpha: 0 }, 500).call(() => this.removeChild(this.background));
-        for (let i = 0; i < areaArray.length; i++) {
-            egret.Tween.get(areaArray[i])
-                .call(() => areaArray[i].fillAlpha = 1)
-                .set({ alpha: 0 })
-                .to({ alpha: 1 }, 500);
-        }
-
-        const stageWidth = egret.MainContext.instance.stage.stageWidth;
-        const stageHeight = egret.MainContext.instance.stage.stageHeight;
-
-        // console.log(stageWidth, stageHeight);
-
+    public reset() {
+        this.startTime = egret.getTimer();
+    }
+    private pointArray = [];
+    public initBombGrid() {
         const wCount = 5;
         const hCount = 5;
-        const w = stageWidth * 0.6 / wCount;
-        const h = stageHeight / hCount;
-        const pointArray = [];
-        const baseX = stageWidth * 0.2;
-        const baseY = stageHeight * 0;
+        const w = this.stageWidth * 0.6 / wCount;
+        const h = this.stageHeight / hCount;
+        const baseX = this.stageWidth * 0.2;
+        const baseY = this.stageHeight * 0;
+        this.pointArray = [];
         for (let i = 0; i < wCount; i++) {
             for (let j = 0; j < hCount; j++) {
                 const x = (baseX + w * i + w / 2) / this.factor;
                 const y = (baseY + h * j + h / 2) / this.factor;
-                pointArray.push({ x, y, random: Math.random() });
+                this.pointArray.push({ x, y });
             }
         }
-
-        pointArray.sort((a, b) => {
+    }
+    public randomBombGrid() {
+        for (let i = 0; i < this.pointArray.length; i++) {
+            this.pointArray[i].random = Math.random();
+        }
+        this.pointArray.sort((a, b) => {
             return a.random - b.random;
         })
-
-        const world: p2.World = new p2.World({
+    }
+    private world: p2.World;
+    private initWorld() {
+        this.world = new p2.World({
             gravity: [0, 0],
         });
-        world.sleepMode = p2.World.BODY_SLEEPING;
+        this.world.sleepMode = p2.World.BODY_SLEEPING;
+    }
+    private makeWallItem({ x, y, w, h }) {
+        const body = new p2.Body({
+            mass: 1,
+            type: p2.Body.STATIC,
+            position: [x, y]
+        });
+        body.addShape(new p2.Box({ width: w, height: h }));
 
-        const makeWall = ({ x, y, w, h }) => {
-            const body = new p2.Body({
-                mass: 1,
-                type: p2.Body.STATIC,
-                position: [x, y]
-            });
-            body.addShape(new p2.Box({ width: w, height: h }));
-
-            const shape = new egret.Shape();
-            shape.graphics.beginFill(0x0000ff, 1);
-            shape.graphics.drawRect(x * this.factor, y * this.factor, w * this.factor, h * this.factor);
-            shape.graphics.endFill();
-            shape.anchorOffsetX = w * this.factor / 2;
-            shape.anchorOffsetY = h * this.factor / 2;
-            body.displays = [shape];
-            this.addChild(shape);
-            return body;
-        }
-
-
+        const shape = new egret.Shape();
+        shape.graphics.beginFill(0x0000ff, 1);
+        shape.graphics.drawRect(x * this.factor, y * this.factor, w * this.factor, h * this.factor);
+        shape.graphics.endFill();
+        shape.anchorOffsetX = w * this.factor / 2;
+        shape.anchorOffsetY = h * this.factor / 2;
+        body.displays = [shape];
+        this.addChild(shape);
+        this.world.addBody(body);
+        return body;
+    }
+    public initWall() {
+        const stageWidth = egret.MainContext.instance.stage.stageWidth;
+        const stageHeight = egret.MainContext.instance.stage.stageHeight;
         const width = stageWidth / this.factor;
         const height = stageHeight / this.factor;
         const thickness = 1 / 10;
@@ -84,45 +90,59 @@ class MainScene extends eui.Component {
             { x: -thickness / 2 + width * 0.2, y: height / 2, w: thickness, h: height },
             { x: width + thickness / 2 - width * 0.2, y: height / 2, w: thickness, h: height },
         ];
-
         for (let i = 0; i < wallArray.length; i++) {
-            world.addBody(makeWall(wallArray[i]));
+            this.makeWallItem(wallArray[i]);
         }
+    }
+    private bombCount = 10;
+    private maxLifeTime = 0;
+    private bombBodyArray = [];
+    private bombArray = [];
+    private resetBomb() {
+        this.randomBombGrid();
+        for (let i = 0; i < this.bombCount; i++) {
+            const bomb = this.bombArray[i];
+            const { x, y } = this.pointArray[i];
+            const lifeTime = (Math.floor(Math.random() * 10) + 10) * 1000;
+            if (lifeTime > this.maxLifeTime) {
+                this.maxLifeTime = lifeTime;
+            }
+            bomb.setLifeTime(lifeTime);
+            bomb.setP(x, y);
+        }
+        // this.maxLifeTime = 1000;
+    }
 
-        const bombCount = 10;
-        const bombArray = [];
-        const bombBodyArray = [];
-        for (let i = 0; i < pointArray.length; i++) {
-            const { x, y } = pointArray[i]
-            const bomb = new Bomb(x, y);
+    public initBomb() {
+        this.bombArray = [];
+        this.bombBodyArray = [];
+        for (let i = 0; i < this.bombCount; i++) {
+            const bomb = new Bomb();
             bomb.addStage(this);
-            bomb.addWorld(world);
-            bombArray.push(bomb);
-            bombBodyArray.push(bomb.getBody());
-            if (i + 1 >= bombCount) break;
+            bomb.addWorld(this.world);
+            this.bombArray.push(bomb);
+            this.bombBodyArray.push(bomb.getBody());
         }
+        this.resetBomb()
 
         let hitBombIndex = -1;
         let mouseSubVec;
         this.addEventListener(egret.TouchEvent.TOUCH_BEGIN, (e: egret.TouchEvent) => {
             hitBombIndex = -1;
-            const mouseP = p2.vec2.fromValues(e.stageX / this.factor, (stageHeight - e.stageY) / this.factor);
-            const collisionArray = world.hitTest(mouseP, world.bodies, 0.1);
+            const mouseP = p2.vec2.fromValues(e.stageX / this.factor, (this.stageHeight - e.stageY) / this.factor);
+            const collisionArray = this.world.hitTest(mouseP, this.world.bodies, 0.1);
             while (collisionArray.length > 0) {
                 const item = collisionArray.shift();
                 if (item.type !== p2.Body.STATIC) {
-                    const index = bombBodyArray.indexOf(item);
+                    const index = this.bombBodyArray.indexOf(item);
                     if (index != -1) {
                         hitBombIndex = index;
-                        const bomb = bombArray[hitBombIndex];
+                        const bomb = this.bombArray[hitBombIndex];
                         bomb.catchUp();
-                        world.removeBody(item);
+                        this.world.removeBody(item);
                         item.sleep();
                         mouseSubVec = p2.vec2.create();
                         p2.vec2.sub(mouseSubVec, item.position, mouseP);
-
-
-
                         break;
                     }
                 }
@@ -131,76 +151,109 @@ class MainScene extends eui.Component {
 
         this.addEventListener(egret.TouchEvent.TOUCH_MOVE, (e: egret.TouchEvent) => {
             if (hitBombIndex != -1) {
-                const mouseP = p2.vec2.fromValues(e.stageX / this.factor, (stageHeight - e.stageY) / this.factor);
-                const bomb = bombArray[hitBombIndex];
+                const mouseP = p2.vec2.fromValues(e.stageX / this.factor, (this.stageHeight - e.stageY) / this.factor);
+                const bomb = this.bombArray[hitBombIndex];
                 const hitCollisionItem = bomb.getBody();
                 p2.vec2.add(
                     hitCollisionItem.position,
                     mouseP,
                     mouseSubVec
                 );
-
                 hitCollisionItem.velocity = p2.vec2.create();
                 this.setPositionBodyToShape(hitCollisionItem);
             }
         }, this);
         this.addEventListener(egret.TouchEvent.TOUCH_END, (e: egret.TouchEvent) => {
             if (hitBombIndex != -1) {
-                const bomb = bombArray[hitBombIndex];
+                const bomb = this.bombArray[hitBombIndex];
                 const hitCollisionItem = bomb.getBody();
-                console.log(
-                    wallArray[0].x, wallArray[0].y
-                    // , wallArray[1].x, wallArray[1].y
-                    , bomb.shape.x, bomb.shape.y
-                    , bomb.shapeBody.position[0], bomb.shapeBody.position[1]
-                );
+                // console.log(
+                //     wallArray[0].x, wallArray[0].y
+                //     , bomb.shape.x, bomb.shape.y
+                //     , bomb.shapeBody.position[0], bomb.shapeBody.position[1]
+                // );
 
                 if (
-                    e.stageX >= stageWidth * 0.2
-                    && e.stageX <= stageWidth * 0.8
-                    && e.stageY >= stageHeight * 0
-                    && e.stageY <= stageHeight * 1
+                    e.stageX >= this.stageWidth * 0.2
+                    && e.stageX <= this.stageWidth * 0.8
+                    && e.stageY >= this.stageHeight * 0
+                    && e.stageY <= this.stageHeight * 1
                 ) {
                     // console.log('紅')
                     bomb.putDownDangerous()
-
                 } else {
                     // console.log('綠');
                     bomb.putDownSafe()
                 }
                 let score = 0;
-                for (let i = 0; i < bombArray.length; i++) {
-                    const bomb = bombArray[i];
+                for (let i = 0; i < this.bombArray.length; i++) {
+                    const bomb = this.bombArray[i];
                     if (bomb.catchState) {
                         score += bomb.getScore();
                     }
                 }
-
                 // console.log(score)
                 this.text.text = "score:" + score;
-                world.addBody(hitCollisionItem);
+                this.world.addBody(hitCollisionItem);
                 hitBombIndex = -1;
             }
         }, this);
 
+        this.drawText();
+    }
+    private timeShape;
+    private resetGame() {
+        // egret.Tween.get(this.startGameBtn)
+        //     // .call(() => this.addChild(this.startGameBtn))
+        //     .set({ alpha: 0 })
+        //     .to({ alpha: 1 }, 500)
+        // egret.Tween.get(this.background)
+        //     // .call(() => this.addChild(this.background))
+        //     .set({ alpha: 0 })
+        //     .to({ alpha: 1 }, 500)
+        // this.startGameBtn.once(egret.TouchEvent.TOUCH_TAP, () => {
+
+        //     this.startTime = egret.getTimer();
+        //     this.randomBombGrid();
+        //     this.resetBomb();
+        //     // this.startTick();
+        //     egret.Tween.get(this.startGameBtn).to({ alpha: 0 }, 500);
+        //     // .call(() => this.removeChild(this.startGameBtn));
+        //     egret.Tween.get(this.background).to({ alpha: 0 }, 500);
+        //     // .call(() => this.removeChild(this.background));
+        // }, this)
+    }
+    public startTick() {
         egret.startTick((timeStamp) => {
-            world.step(16 / 1000);
-            for (let i = 0; i < bombArray.length; i++) {
-                const item = bombArray[i];
+            this.timeShape.graphics.clear();
+            this.timeShape.graphics.beginFill(0xff0000);
+            let d = ((egret.getTimer() - this.startTime) / this.maxLifeTime);
+            // console.log(egret.getTimer());
+            const width = d * this.stage.stageWidth;
+            this.timeShape.graphics.drawRect(0, 0, width, 10);
+            this.timeShape.graphics.endFill();
+
+            if (d > 1) {
+                this.resetGame();
+                return true;
+            }
+
+            // console.log(maxTime);
+            this.world.step(16 / 1000);
+            for (let i = 0; i < this.bombArray.length; i++) {
+                const item = this.bombArray[i];
                 item.drawTimeLife(timeStamp);
                 item.randomMove(5);
                 item.setParticlePosition();
             }
-            for (let i = 0; i < world.bodies.length; i++) {
-                const boxBody = world.bodies[i];
+            for (let i = 0; i < this.world.bodies.length; i++) {
+                const boxBody = this.world.bodies[i];
                 if (boxBody.type == p2.Body.STATIC) continue
                 this.setPositionBodyToShape(boxBody);
             }
             return false;
         }, this);
-        this.drawText();
     }
-
     public setPositionBodyToShape(body: p2.Body) {
         const stageHeight = egret.MainContext.instance.stage.stageHeight;
         const box: egret.DisplayObject = body.displays[0];
@@ -209,11 +262,13 @@ class MainScene extends eui.Component {
             box.y = stageHeight - (body.position[1] * this.factor);
 
             box.rotation = 360 - (body.angle + body.shapes[0].angle) * 180 / Math.PI;
+
             // if (body.sleepState == p2.Body.SLEEPING) {
             //     box.alpha = 0.5;
             // } else {
             //     box.alpha = 1;
             // }
+
         }
     }
     private text: egret.TextField;

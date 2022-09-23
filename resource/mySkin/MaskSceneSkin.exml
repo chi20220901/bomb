@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<e:Skin class="skins.MaskSceneSkin" width="1136" height="640" xmlns:e="http://ns.egret.com/eui" xmlns:w="http://ns.egret.com/wing">
+	<e:Rect id="background" width="100%" height="100%" x="0" y="0 " visible="true" fillAlpha="1" fillColor="0x000000"/>
+    <e:Button id="startGameBtn" label="開始遊戲" x="479.989" y="279.389" width="176.022" height="81.223" visible="true" />
+</e:Skin>

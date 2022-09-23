@@ -119,6 +119,7 @@ var Main = (function (_super) {
                     case 1:
                         _a.sent();
                         this.addChild(new MainScene());
+                        this.addChild(new MainScene());
                         return [2 /*return*/];
                 }
             });

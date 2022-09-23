@@ -54,3 +54,7 @@ declare module skins{
 	class MainSceneSkin extends eui.Skin{
 	}
 }
+declare module skins{
+	class MaskSceneSkin extends eui.Skin{
+	}
+}

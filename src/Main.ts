@@ -54,8 +54,21 @@ class Main extends eui.UILayer {
 
     private async runGame() {
         await this.loadResource();
-
-        this.addChild(new MainScene());
+        const mainScene = new MainScene();
+        this.addChild(mainScene);
+        mainScene.initWall();
+        mainScene.initBomb();
+        // mainScene.startTick();
+        const maskScene = new MaskScene();
+        egret.Tween.get(maskScene).set({ alpha: 1 });
+        egret.Tween.get(mainScene).set({ alpha: 0 });
+        this.addChild(maskScene);
+        maskScene.listenerClickBtn(() => {
+            egret.Tween.get(maskScene).to({ alpha: 0 }, 500).call(() => this.removeChild(maskScene))
+            egret.Tween.get(mainScene).to({ alpha: 1 }, 500);
+            mainScene.startTick();
+            // console.log('click')
+        });
 
         // const skeletonData = RES.getRes("Sheep_Ani_1_ske_json");
         // const textureData = RES.getRes("Sheep_Ani_1_tex_json");
