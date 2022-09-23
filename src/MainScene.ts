@@ -79,10 +79,10 @@ class MainScene extends eui.Component {
         const height = stageHeight / this.factor;
         const thickness = 1 / 10;
         const wallArray = [
-            // { x: width / 2, y: height + thickness / 2, w: width, h: thickness },
-            // { x: width / 2, y: -thickness / 2, w: width, h: thickness },
+            { x: width / 2, y: height + thickness / 2, w: width, h: thickness },
+            { x: width / 2, y: -thickness / 2, w: width, h: thickness },
             { x: -thickness / 2 + width * 0.2, y: height / 2, w: thickness, h: height },
-            // { x: width + thickness / 2 - width * 0.2, y: height / 2, w: thickness, h: height },
+            { x: width + thickness / 2 - width * 0.2, y: height / 2, w: thickness, h: height },
         ];
 
         for (let i = 0; i < wallArray.length; i++) {
