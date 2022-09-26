@@ -30,15 +30,22 @@
 class Main extends eui.UILayer {
     protected createChildren(): void {
         super.createChildren();
-        egret.lifecycle.onPause = () => egret.ticker.pause();
-        egret.lifecycle.onResume = () => egret.ticker.resume();
+
+        egret.lifecycle.onPause = () => {
+            egret.ticker.pause();
+            this.mainScenePause();
+        }
+
+        egret.lifecycle.onResume = () => {
+            egret.ticker.resume();
+            this.mainSceneResume();
+        }
 
         egret.registerImplementation("eui.IAssetAdapter", new AssetAdapter());
         egret.registerImplementation("eui.IThemeAdapter", new ThemeAdapter());
 
         this.runGame();
     }
-
     private async loadResource() {
         const loadingView = new LoadingUI();
         this.stage.addChild(loadingView);
@@ -51,29 +58,56 @@ class Main extends eui.UILayer {
         this.stage.removeChild(loadingView);
     }
 
+    private gameRunState: boolean = false;
+    private pauseTime: number = 0;
+    private tmpPauseTime: number;
+    private mainScenePause() {
+        if (this.gameRunState) {
+            this.tmpPauseTime = egret.getTimer();
+            // this.mainScene.pause();
+        }
+    }
+
+    private mainSceneResume() {
+        if (this.gameRunState) {
+            this.pauseTime += egret.getTimer() - this.tmpPauseTime;
+            this.mainScene.setPauseTime(this.pauseTime);
+            // console.log(d);
+        }
+    }
+
+    private mainScene;
     private async runGame() {
         await this.loadResource();
         const mainScene = new MainScene();
+        this.mainScene = mainScene;
         this.addChild(mainScene);
         mainScene.initWall();
         mainScene.initBomb();
-        mainScene.startTick();
 
         const maskScene = new MaskScene();
         this.addChild(maskScene);
 
         maskScene.listenerClickBtn(() => {
-
-            egret.Tween.get(maskScene).to({ alpha: 0 }, 500).call(() => this.removeChild(maskScene));
+            this.pauseTime = 0;
+            this.gameRunState = true
+            egret.Tween.get(maskScene)
+                .to({ alpha: 0 }, 500)
+                .call(() => this.removeChild(maskScene));
             // egret.Tween.get(mainScene).to({ alpha: 1 }, 500);
-            mainScene.initTimer();
+            mainScene.setPauseTime(0);
+            mainScene.initText();
             mainScene.resetBomb();
+            mainScene.regStartTick();
+
         });
 
         mainScene.endHandler(() => {
+            this.gameRunState = false;
             egret.Tween.get(maskScene).call(() => this.addChild(maskScene)).to({ alpha: 1 }, 500);
             // egret.Tween.get(mainScene).to({ alpha: 0 }, 500);
             maskScene.setScore(mainScene.getScore());
+            mainScene.unRegStartTick();
         });
 
         // const skeletonData = RES.getRes("Sheep_Ani_1_ske_json");

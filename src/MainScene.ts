@@ -22,9 +22,9 @@ class MainScene extends eui.Component {
         this.addChild(this.timeShape);
 
     }
-    public initTimer() {
+    public initText() {
         this.text.text = "請將丸子移出油鍋(越接近油的顏色分數越高)";
-        this.startTime = egret.getTimer();
+
     }
     private pointArray = [];
     public initBombGrid() {
@@ -194,34 +194,42 @@ class MainScene extends eui.Component {
         this.drawText();
     }
     private timeShape;
-    public startTick() {
-        egret.startTick((timeStamp) => {
-            let d = ((egret.getTimer() - this.startTime) / this.maxLifeTime);
-            if (d > 1) {
-                this.resetGame();
-                return true;
-            }
-            // console.log(maxTime);
-            this.world.step(16 / 1000);
-            for (let i = 0; i < this.bombArray.length; i++) {
-                const item = this.bombArray[i];
-                item.drawTimeLife(timeStamp);
-                item.randomMove(5);
-                item.setParticlePosition();
-            }
-            for (let i = 0; i < this.world.bodies.length; i++) {
-                const boxBody = this.world.bodies[i];
-                if (boxBody.type == p2.Body.STATIC) continue
-                this.setPositionBodyToShape(boxBody);
-            }
-            this.timeShape.graphics.clear();
-            this.timeShape.graphics.beginFill(0xff0000);
-            // console.log(egret.getTimer());
-            const width = d * this.stage.stageWidth;
-            this.timeShape.graphics.drawRect(0, 0, width, 10);
-            this.timeShape.graphics.endFill();
-            return false;
-        }, this);
+    private startTickFunc(timeStamp) {
+        // 
+        let d = ((egret.getTimer() - this.startTime - this.pauseTime) / this.maxLifeTime);
+        if (d > 1) {
+            this.resetGame();
+            return true;
+        }
+        // console.log(maxTime);
+        this.world.step(16 / 1000);
+        for (let i = 0; i < this.bombArray.length; i++) {
+            const item = this.bombArray[i];
+            item.drawTimeLife(timeStamp);
+            item.randomMove(5);
+            item.setParticlePosition();
+        }
+        for (let i = 0; i < this.world.bodies.length; i++) {
+            const boxBody = this.world.bodies[i];
+            if (boxBody.type == p2.Body.STATIC) continue
+            this.setPositionBodyToShape(boxBody);
+        }
+        this.timeShape.graphics.clear();
+        this.timeShape.graphics.beginFill(0xff0000);
+
+        // console.log(egret.getTimer());
+
+        const width = d * this.stage.stageWidth;
+        this.timeShape.graphics.drawRect(0, 0, width, 10);
+        this.timeShape.graphics.endFill();
+        return false;
+    }
+    public regStartTick(d = 0) {
+        this.startTime = egret.getTimer();
+        egret.startTick(this.startTickFunc, this);
+    }
+    public unRegStartTick() {
+        egret.stopTick(this.startTickFunc, this);
     }
     public setPositionBodyToShape(body: p2.Body) {
         const stageHeight = egret.MainContext.instance.stage.stageHeight;
@@ -229,9 +237,7 @@ class MainScene extends eui.Component {
         if (box) {
             box.x = body.position[0] * this.factor;
             box.y = stageHeight - (body.position[1] * this.factor);
-
             box.rotation = 360 - (body.angle + body.shapes[0].angle) * 180 / Math.PI;
-
         }
     }
     private text: egret.TextField;
@@ -263,5 +269,9 @@ class MainScene extends eui.Component {
             }
         }
         return score;
+    }
+    private pauseTime: number = 0;
+    public setPauseTime(pauseTime) {
+        this.pauseTime = pauseTime;
     }
 }
