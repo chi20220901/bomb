@@ -1,8 +1,8 @@
 class MainScene extends eui.Component {
 
-    private safeArea1: eui.Rect;
-    private safeArea2: eui.Rect;
-    private dangerousArea: eui.Rect;
+    // private safeArea1: eui.Rect;
+    // private safeArea2: eui.Rect;
+    // private dangerousArea: eui.Rect;
 
     private factor: number = 50;
     private startTime: number;
@@ -15,16 +15,15 @@ class MainScene extends eui.Component {
 
         this.stageWidth = egret.MainContext.instance.stage.stageWidth;
         this.stageHeight = egret.MainContext.instance.stage.stageHeight;
-        this.startTime = egret.getTimer();
         this.initBombGrid();
         this.randomBombGrid();
         this.initWorld();
         this.timeShape = new egret.Shape();
         this.addChild(this.timeShape);
 
-
     }
-    public reset() {
+    public initTimer() {
+        this.text.text = "請將丸子移出油鍋(越接近油的顏色分數越高)";
         this.startTime = egret.getTimer();
     }
     private pointArray = [];
@@ -98,19 +97,23 @@ class MainScene extends eui.Component {
     private maxLifeTime = 0;
     private bombBodyArray = [];
     private bombArray = [];
-    private resetBomb() {
+    public resetBomb() {
         this.randomBombGrid();
         for (let i = 0; i < this.bombCount; i++) {
             const bomb = this.bombArray[i];
             const { x, y } = this.pointArray[i];
             const lifeTime = (Math.floor(Math.random() * 10) + 10) * 1000;
+            // const lifeTime = 2000;
             if (lifeTime > this.maxLifeTime) {
                 this.maxLifeTime = lifeTime;
             }
+            bomb.putDownDangerous();
             bomb.setLifeTime(lifeTime);
             bomb.setP(x, y);
+            const body = bomb.getBody()
+            this.world.removeBody(body);
+            this.world.addBody(body);
         }
-        // this.maxLifeTime = 1000;
     }
 
     public initBomb() {
@@ -139,6 +142,7 @@ class MainScene extends eui.Component {
                         hitBombIndex = index;
                         const bomb = this.bombArray[hitBombIndex];
                         bomb.catchUp();
+
                         this.world.removeBody(item);
                         item.sleep();
                         mouseSubVec = p2.vec2.create();
@@ -167,11 +171,6 @@ class MainScene extends eui.Component {
             if (hitBombIndex != -1) {
                 const bomb = this.bombArray[hitBombIndex];
                 const hitCollisionItem = bomb.getBody();
-                // console.log(
-                //     wallArray[0].x, wallArray[0].y
-                //     , bomb.shape.x, bomb.shape.y
-                //     , bomb.shapeBody.position[0], bomb.shapeBody.position[1]
-                // );
 
                 if (
                     e.stageX >= this.stageWidth * 0.2
@@ -185,15 +184,8 @@ class MainScene extends eui.Component {
                     // console.log('綠');
                     bomb.putDownSafe()
                 }
-                let score = 0;
-                for (let i = 0; i < this.bombArray.length; i++) {
-                    const bomb = this.bombArray[i];
-                    if (bomb.catchState) {
-                        score += bomb.getScore();
-                    }
-                }
-                // console.log(score)
-                this.text.text = "score:" + score;
+
+                this.text.text = "score:" + this.getScore();
                 this.world.addBody(hitCollisionItem);
                 hitBombIndex = -1;
             }
@@ -202,41 +194,14 @@ class MainScene extends eui.Component {
         this.drawText();
     }
     private timeShape;
-    private resetGame() {
-        // egret.Tween.get(this.startGameBtn)
-        //     // .call(() => this.addChild(this.startGameBtn))
-        //     .set({ alpha: 0 })
-        //     .to({ alpha: 1 }, 500)
-        // egret.Tween.get(this.background)
-        //     // .call(() => this.addChild(this.background))
-        //     .set({ alpha: 0 })
-        //     .to({ alpha: 1 }, 500)
-        // this.startGameBtn.once(egret.TouchEvent.TOUCH_TAP, () => {
-
-        //     this.startTime = egret.getTimer();
-        //     this.randomBombGrid();
-        //     this.resetBomb();
-        //     // this.startTick();
-        //     egret.Tween.get(this.startGameBtn).to({ alpha: 0 }, 500);
-        //     // .call(() => this.removeChild(this.startGameBtn));
-        //     egret.Tween.get(this.background).to({ alpha: 0 }, 500);
-        //     // .call(() => this.removeChild(this.background));
-        // }, this)
-    }
     public startTick() {
         egret.startTick((timeStamp) => {
-            this.timeShape.graphics.clear();
-            this.timeShape.graphics.beginFill(0xff0000);
             let d = ((egret.getTimer() - this.startTime) / this.maxLifeTime);
-            // console.log(egret.getTimer());
-            const width = d * this.stage.stageWidth;
-            this.timeShape.graphics.drawRect(0, 0, width, 10);
-            this.timeShape.graphics.endFill();
-
             if (d > 1) {
                 this.resetGame();
                 return true;
             }
+
 
             // console.log(maxTime);
             this.world.step(16 / 1000);
@@ -251,6 +216,12 @@ class MainScene extends eui.Component {
                 if (boxBody.type == p2.Body.STATIC) continue
                 this.setPositionBodyToShape(boxBody);
             }
+            this.timeShape.graphics.clear();
+            this.timeShape.graphics.beginFill(0xff0000);
+            // console.log(egret.getTimer());
+            const width = d * this.stage.stageWidth;
+            this.timeShape.graphics.drawRect(0, 0, width, 10);
+            this.timeShape.graphics.endFill();
             return false;
         }, this);
     }
@@ -262,12 +233,6 @@ class MainScene extends eui.Component {
             box.y = stageHeight - (body.position[1] * this.factor);
 
             box.rotation = 360 - (body.angle + body.shapes[0].angle) * 180 / Math.PI;
-
-            // if (body.sleepState == p2.Body.SLEEPING) {
-            //     box.alpha = 0.5;
-            // } else {
-            //     box.alpha = 1;
-            // }
 
         }
     }
@@ -285,6 +250,20 @@ class MainScene extends eui.Component {
         this.text.type = egret.TextFieldType.DYNAMIC;
         this.text.lineSpacing = 6;
         this.text.multiline = true;
-        this.text.text = "請將丸子移出油鍋(越接近油的顏色分數越高)";
+
+    }
+    private resetGame: Function;
+    public endHandler(func) {
+        this.resetGame = func
+    }
+    public getScore() {
+        let score = 0;
+        for (let i = 0; i < this.bombArray.length; i++) {
+            const bomb = this.bombArray[i];
+            if (bomb.catchState) {
+                score += bomb.getScore();
+            }
+        }
+        return score;
     }
 }

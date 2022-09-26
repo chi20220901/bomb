@@ -26,7 +26,7 @@ class Bomb {
     }
     public setLifeTime(lifeTime) {
         this.totalTime = lifeTime;
-        this.finishTime = this.totalTime + egret.getTimer();
+        this.finishTime = lifeTime + egret.getTimer();
     }
     public setP(x, y) {
         this.shapeBody.position = [x, y]
@@ -123,7 +123,7 @@ class Bomb {
         if (this.catchState) return
         this.catchState = true;
         this.catchTime = this.finishTime - egret.getTimer();
-        this.shapeBody.type = p2.Body.KINEMATIC;
+        this.shapeBody.type = p2.Body.DYNAMIC;
         this.particle.stop();
     }
 
@@ -131,15 +131,14 @@ class Bomb {
         this.catchState = false;
         this.finishTime = this.catchTime + egret.getTimer();
         this.shapeBody.type = p2.Body.DYNAMIC;
+        this.shapeBody.velocity = [0, 0];
         this.particle.start();
     }
 
     public putDownSafe() {
-        // const catchStateChange = this.catchState == true;
         this.catchState = true;
         this.finishTime = this.catchTime + egret.getTimer();
-        this.shapeBody.type = p2.Body.KINEMATIC;
-        // return catchStateChange;
+        this.shapeBody.type = p2.Body.DYNAMIC;
     }
     private score = 0;
     public getScore() {

@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<e:Skin class="skins.MainSceneSkin" width="1136" height="640" xmlns:e="http://ns.egret.com/eui"
+        xmlns:w="http://ns.egret.com/wing">
+	<e:Rect id="safeArea1" width="20%" height="100%" fillAlpha="1" visible="true" fillColor="0x5CAA43" enabled="true"
+	        touchEnabled="false" />
+	<e:Rect id="safeArea2" width="20%" height="100%" fillAlpha="1" visible="true" x="909" fillColor="0x5CAA43"
+	        enabled="true" />
+	<e:Rect id="dangerousArea" width="60%" height="100%" x="227" y="0" fillAlpha="1" visible="true" enabled="true"
+	        fillColor="0xEFD54D" />
+</e:Skin>

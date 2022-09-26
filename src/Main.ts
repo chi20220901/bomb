@@ -40,7 +40,6 @@ class Main extends eui.UILayer {
     }
 
     private async loadResource() {
-
         const loadingView = new LoadingUI();
         this.stage.addChild(loadingView);
         await RES.loadConfig("resource/default.res.json", "resource/");
@@ -58,16 +57,23 @@ class Main extends eui.UILayer {
         this.addChild(mainScene);
         mainScene.initWall();
         mainScene.initBomb();
-        // mainScene.startTick();
+        mainScene.startTick();
+
         const maskScene = new MaskScene();
-        egret.Tween.get(maskScene).set({ alpha: 1 });
-        egret.Tween.get(mainScene).set({ alpha: 0 });
         this.addChild(maskScene);
+
         maskScene.listenerClickBtn(() => {
-            egret.Tween.get(maskScene).to({ alpha: 0 }, 500).call(() => this.removeChild(maskScene))
-            egret.Tween.get(mainScene).to({ alpha: 1 }, 500);
-            mainScene.startTick();
-            // console.log('click')
+
+            egret.Tween.get(maskScene).to({ alpha: 0 }, 500).call(() => this.removeChild(maskScene));
+            // egret.Tween.get(mainScene).to({ alpha: 1 }, 500);
+            mainScene.initTimer();
+            mainScene.resetBomb();
+        });
+
+        mainScene.endHandler(() => {
+            egret.Tween.get(maskScene).call(() => this.addChild(maskScene)).to({ alpha: 1 }, 500);
+            // egret.Tween.get(mainScene).to({ alpha: 0 }, 500);
+            maskScene.setScore(mainScene.getScore());
         });
 
         // const skeletonData = RES.getRes("Sheep_Ani_1_ske_json");
