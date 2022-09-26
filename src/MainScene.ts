@@ -195,33 +195,35 @@ class MainScene extends eui.Component {
     }
     private timeShape;
     private startTickFunc(timeStamp) {
-        // 
         let d = ((egret.getTimer() - this.startTime - this.pauseTime) / this.maxLifeTime);
         if (d > 1) {
             this.resetGame();
             return true;
         }
+        // timeStamp -= ;
+        this.timeShape.graphics.clear();
+        this.timeShape.graphics.beginFill(0xff0000);
+        const width = d * this.stage.stageWidth;
+        this.timeShape.graphics.drawRect(0, 0, width, 10);
+        this.timeShape.graphics.endFill();
+
         // console.log(maxTime);
         this.world.step(16 / 1000);
         for (let i = 0; i < this.bombArray.length; i++) {
             const item = this.bombArray[i];
+            // console.log(this.pauseTime)
+            item.setPauseTime(this.pauseTime);
             item.drawTimeLife(timeStamp);
             item.randomMove(5);
             item.setParticlePosition();
         }
+
         for (let i = 0; i < this.world.bodies.length; i++) {
             const boxBody = this.world.bodies[i];
             if (boxBody.type == p2.Body.STATIC) continue
             this.setPositionBodyToShape(boxBody);
         }
-        this.timeShape.graphics.clear();
-        this.timeShape.graphics.beginFill(0xff0000);
 
-        // console.log(egret.getTimer());
-
-        const width = d * this.stage.stageWidth;
-        this.timeShape.graphics.drawRect(0, 0, width, 10);
-        this.timeShape.graphics.endFill();
         return false;
     }
     public regStartTick(d = 0) {

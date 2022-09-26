@@ -32,10 +32,10 @@ class Bomb {
         this.shapeBody.position = [x, y]
     }
     public drawTimeLife(timeStamp) {
-        let dt = 1 - (this.finishTime - timeStamp) / this.totalTime;
+        let dt = 1 - (this.finishTime + this.pauseTime - timeStamp) / this.totalTime;
 
         if (this.catchState) {
-            dt = 1 - this.catchTime / this.totalTime;
+            dt = 1 - (this.catchTime + this.pauseTime) / this.totalTime;
         }
         if (dt > 1) {
             dt = 1
@@ -143,14 +143,20 @@ class Bomb {
     private score = 0;
     public getScore() {
         const timeStamp = egret.getTimer()
-        let dt = 1 - (this.finishTime - timeStamp) / this.totalTime;
+        let dt = 1 - (this.finishTime + this.pauseTime - timeStamp) / this.totalTime;
+
         if (this.catchState) {
-            dt = 1 - this.catchTime / this.totalTime;
+            dt = 1 - (this.catchTime + this.pauseTime) / this.totalTime;
         }
         if (dt > 1) {
-            dt = 1;
+            dt = 1
         }
+
         this.score = ((0.5 - Math.abs(dt - 0.5)) * 2 * 100) >> 0;
         return this.score;
+    }
+    private pauseTime: number;
+    public setPauseTime(pauseTime) {
+        this.pauseTime = pauseTime;
     }
 }
