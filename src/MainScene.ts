@@ -66,14 +66,14 @@ class MainScene extends eui.Component {
         });
         body.addShape(new p2.Box({ width: w, height: h }));
 
-        const shape = new egret.Shape();
-        shape.graphics.beginFill(0x0000ff, 1);
-        shape.graphics.drawRect(x * this.factor, y * this.factor, w * this.factor, h * this.factor);
-        shape.graphics.endFill();
-        shape.anchorOffsetX = w * this.factor / 2;
-        shape.anchorOffsetY = h * this.factor / 2;
-        body.displays = [shape];
-        this.addChild(shape);
+        // const shape = new egret.Shape();
+        // shape.graphics.beginFill(0x0000ff, 1);
+        // shape.graphics.drawRect(x * this.factor, y * this.factor, w * this.factor, h * this.factor);
+        // shape.graphics.endFill();
+        // shape.anchorOffsetX = w * this.factor / 2;
+        // shape.anchorOffsetY = h * this.factor / 2;
+        // body.displays = [shape];
+        // this.addChild(shape);
         this.world.addBody(body);
         return body;
     }
@@ -82,7 +82,7 @@ class MainScene extends eui.Component {
         const stageHeight = egret.MainContext.instance.stage.stageHeight;
         const width = stageWidth / this.factor;
         const height = stageHeight / this.factor;
-        const thickness = 1 / 10;
+        const thickness = 10;
         const wallArray = [
             { x: width / 2, y: height + thickness / 2, w: width, h: thickness },
             { x: width / 2, y: -thickness / 2, w: width, h: thickness },
@@ -201,8 +201,6 @@ class MainScene extends eui.Component {
                 this.resetGame();
                 return true;
             }
-
-
             // console.log(maxTime);
             this.world.step(16 / 1000);
             for (let i = 0; i < this.bombArray.length; i++) {

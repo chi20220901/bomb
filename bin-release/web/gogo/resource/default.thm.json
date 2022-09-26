@@ -14,7 +14,7 @@
 		"eui.VSlider": "resource/eui_skins/VSliderSkin.exml",
 		"eui.ItemRenderer": "resource/eui_skins/ItemRendererSkin.exml",
 		"eui.MainSceneSkin": "resource/mySkin/MainSceneSkin.exml",
-		"eui.BombSkin": "resource/mySkin/BombSkin.exml"
+		"eui.MaskSceneSkin": "resource/mySkin/MaskSceneSkin.exml"
 	},
 	"autoGenerateExmlsList": true,
 	"exmls": [
@@ -31,7 +31,8 @@
 		"resource/eui_skins/ToggleSwitchSkin.exml",
 		"resource/eui_skins/VScrollBarSkin.exml",
 		"resource/eui_skins/VSliderSkin.exml",
-		"resource/mySkin/MainSceneSkin.exml"
+		"resource/mySkin/MainSceneSkin.exml",
+		"resource/mySkin/MaskSceneSkin.exml"
 	],
 	"path": "resource/default.thm.json"
 }

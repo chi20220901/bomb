@@ -123,7 +123,7 @@ class Bomb {
         if (this.catchState) return
         this.catchState = true;
         this.catchTime = this.finishTime - egret.getTimer();
-        this.shapeBody.type = p2.Body.DYNAMIC;
+        this.shapeBody.type = p2.Body.STATIC;
         this.particle.stop();
     }
 
@@ -138,7 +138,7 @@ class Bomb {
     public putDownSafe() {
         this.catchState = true;
         this.finishTime = this.catchTime + egret.getTimer();
-        this.shapeBody.type = p2.Body.DYNAMIC;
+        this.shapeBody.type = p2.Body.KINEMATIC;
     }
     private score = 0;
     public getScore() {
